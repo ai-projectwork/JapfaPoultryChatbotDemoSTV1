@@ -475,103 +475,107 @@ elif menu == "Submit Incident Report":
         if st.session_state.case_id_list:
             case_record_id = st.selectbox("Select Record ID to Update", options=st.session_state.case_id_list, key="case_id_select")
             # st.write(f"Your selected case ID : {case_record_id}")
+            fetch_btn = st.form_submit_button("Fetch Record")
+
+            if fetch_btn:
+                # Fetch the record from the database based on the selected case ID     
+                #Supabase codes
+                connection = psycopg2.connect(
+                            user=USER,
+                            password=PASSWORD,
+                            host=HOST,
+                            port=PORT,
+                            dbname=DBNAME
+                        )
+
+                print("Connection successful!")
+                # Create a cursor to execute SQL queries
+                cursor = connection.cursor()
+        
+                cursor.execute(
+                    "SELECT body_weight, body_temperature, vaccination_records, symptoms, image_analysis FROM poultry_health_records WHERE case_id = %s",
+                    (case_record_id,))
+                row = cursor.fetchone()
+                # Close the cursor and connection
+                cursor.close()
+                connection.close()
+                print("Connection closed.")
+                if row:
+                    st.session_state.record_found = True
+                    st.session_state.update_fields = {
+                        "body_weight": row[0],
+                        "body_temp": row[1],
+                        "vaccines": row[2],
+                        "symptoms": row[3],
+                        "image_analysis": row[4]
+                    }
+                    st.success("Record found. You can now check the fields below.")          
+                else:
+                    st.session_state.record_found = False
+                    st.session_state.update_fields = {}
+                    st.error("Record not found. Please check the ID.")
+
+            # Only display the update form if a record was found
+            if st.session_state.record_found:
+                update_fields = st.session_state.update_fields
+                case_id = st.text_input("Case ID", value=case_record_id, disabled=True)
+                new_body_weight = st.number_input("Body Weight (kg)", min_value=0.0, value=update_fields.get("body_weight", 0.0), key="update_weight", disabled=True)
+                new_body_temp = st.number_input("Body Temperature (°C)", min_value=0.0, value=update_fields.get("body_temp", 0.0), key="update_temp", disabled=True)
+                new_vaccines = st.text_input("Vaccination Records", value=update_fields.get("vaccines", ""), key="update_vaccines", disabled=True)
+                new_symptoms = st.text_input("Symptoms", value=update_fields.get("symptoms", ""), key="update_symptoms", disabled=True)
+                new_image_analysis = st.text_input("Image Analysis", value=update_fields.get("image_analysis", ""), key="update_image_analysis", disabled=True)
+                uploaded_image = st.file_uploader("Upload New Image (optional)", type=["jpg", "jpeg", "png"], key="update_image", disabled=True)
+                new_image_analysis = update_fields.get("image_analysis", "")
+
+                #Submit button for update
+                confirm = st.checkbox("I confirm to submit and set this case as Open.")
+                submit_btn = st.form_submit_button("Submit case")
+                if submit_btn:
+                    # Confirm with user before executing
+                    if confirm:
+                        try:
+                            conn = psycopg2.connect(
+                            user=USER,
+                            password=PASSWORD,
+                            host=HOST,
+                            port=PORT,
+                            dbname=DBNAME
+                        )
+                            cur = conn.cursor()
+                            update_sql = "UPDATE poultry_health_records SET case_status = 'Open', case_owner = 'Sales' WHERE case_id = %s"
+                            cur.execute(update_sql, (case_id,))
+                            conn.commit()
+                            st.success("Case status updated to Open.")
+                            # Refresh the case_id_list after update
+                            cur.execute("SELECT case_id FROM poultry_health_records WHERE case_status IS NULL OR case_status = ''")
+                            case_id_rows = cur.fetchall()
+                            # case_id_list = [row[0] for row in case_id_rows]
+                            st.session_state.case_id_list = [row[0] for row in case_id_rows]
+                            st.session_state.record_found = False  # Reset form state
+                            st.info("Dropdown list updated. If you don't see changes, try reloading the page.")
+
+                            continue_btn = st.form_submit_button("Continue")
+                            if continue_btn:    
+                                # Force a rerun to update the selectbox
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"Database error: {e}")
+                        finally:
+                            if 'cur' in locals():
+                                cur.close()
+                            if 'conn' in locals():
+                                conn.close()
+                        st.success("Record updated successfully!")
+                    else:
+                        st.warning("Please confirm before submitting.")
+
+
+
         else:
             st.warning("No records found in poultry_health_records.")
 
        
-        fetch_btn = st.form_submit_button("Fetch Record")
-
-        if fetch_btn:
-            # Fetch the record from the database based on the selected case ID     
-            #Supabase codes
-            connection = psycopg2.connect(
-                        user=USER,
-                        password=PASSWORD,
-                        host=HOST,
-                        port=PORT,
-                        dbname=DBNAME
-                    )
-
-            print("Connection successful!")
-            # Create a cursor to execute SQL queries
-            cursor = connection.cursor()
-    
-            cursor.execute(
-                "SELECT body_weight, body_temperature, vaccination_records, symptoms, image_analysis FROM poultry_health_records WHERE case_id = %s",
-                (case_record_id,))
-            row = cursor.fetchone()
-            # Close the cursor and connection
-            cursor.close()
-            connection.close()
-            print("Connection closed.")
-            if row:
-                st.session_state.record_found = True
-                st.session_state.update_fields = {
-                    "body_weight": row[0],
-                    "body_temp": row[1],
-                    "vaccines": row[2],
-                    "symptoms": row[3],
-                    "image_analysis": row[4]
-                }
-                st.success("Record found. You can now check the fields below.")          
-            else:
-                st.session_state.record_found = False
-                st.session_state.update_fields = {}
-                st.error("Record not found. Please check the ID.")
-
-        # Only display the update form if a record was found
-        if st.session_state.record_found:
-            update_fields = st.session_state.update_fields
-            case_id = st.text_input("Case ID", value=case_record_id, disabled=True)
-            new_body_weight = st.number_input("Body Weight (kg)", min_value=0.0, value=update_fields.get("body_weight", 0.0), key="update_weight", disabled=True)
-            new_body_temp = st.number_input("Body Temperature (°C)", min_value=0.0, value=update_fields.get("body_temp", 0.0), key="update_temp", disabled=True)
-            new_vaccines = st.text_input("Vaccination Records", value=update_fields.get("vaccines", ""), key="update_vaccines", disabled=True)
-            new_symptoms = st.text_input("Symptoms", value=update_fields.get("symptoms", ""), key="update_symptoms", disabled=True)
-            new_image_analysis = st.text_input("Image Analysis", value=update_fields.get("image_analysis", ""), key="update_image_analysis", disabled=True)
-            uploaded_image = st.file_uploader("Upload New Image (optional)", type=["jpg", "jpeg", "png"], key="update_image", disabled=True)
-            new_image_analysis = update_fields.get("image_analysis", "")
-
-            #Submit button for update
-            confirm = st.checkbox("I confirm to submit and set this case as Open.")
-            submit_btn = st.form_submit_button("Submit case")
-            if submit_btn:
-                # Confirm with user before executing
-                if confirm:
-                    try:
-                        conn = psycopg2.connect(
-                        user=USER,
-                        password=PASSWORD,
-                        host=HOST,
-                        port=PORT,
-                        dbname=DBNAME
-                    )
-                        cur = conn.cursor()
-                        update_sql = "UPDATE poultry_health_records SET case_status = 'Open', case_owner = 'Sales' WHERE case_id = %s"
-                        cur.execute(update_sql, (case_id,))
-                        conn.commit()
-                        st.success("Case status updated to Open.")
-                        # Refresh the case_id_list after update
-                        cur.execute("SELECT case_id FROM poultry_health_records WHERE case_status IS NULL OR case_status = ''")
-                        case_id_rows = cur.fetchall()
-                        # case_id_list = [row[0] for row in case_id_rows]
-                        st.session_state.case_id_list = [row[0] for row in case_id_rows]
-                        st.session_state.record_found = False  # Reset form state
-                        st.info("Dropdown list updated. If you don't see changes, try reloading the page.")
-
-                        continue_btn = st.form_submit_button("Continue")
-                        if continue_btn:    
-                            # Force a rerun to update the selectbox
-                            st.rerun()
-                    except Exception as e:
-                        st.error(f"Database error: {e}")
-                    finally:
-                        if 'cur' in locals():
-                            cur.close()
-                        if 'conn' in locals():
-                            conn.close()
-                    st.success("Record updated successfully!")
-                else:
-                    st.warning("Please confirm before submitting.")
+        
                 
 
 elif menu == "Sale Management":
