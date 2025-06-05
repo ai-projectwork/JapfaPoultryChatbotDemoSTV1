@@ -472,10 +472,11 @@ elif menu == "Submit Incident Report":
         st.session_state.case_id_list = [row[0] for row in case_id_rows]
         print(f"[DEBUG] Initialized case_id_list: {st.session_state.case_id_list}")
 
+        fetch_btn = st.form_submit_button("Fetch Record")
         if st.session_state.case_id_list:
             case_record_id = st.selectbox("Select Record ID to Update", options=st.session_state.case_id_list, key="case_id_select")
             # st.write(f"Your selected case ID : {case_record_id}")
-            fetch_btn = st.form_submit_button("Fetch Record")
+            # fetch_btn = st.form_submit_button("Fetch Record")
 
             if fetch_btn:
                 # Fetch the record from the database based on the selected case ID     
