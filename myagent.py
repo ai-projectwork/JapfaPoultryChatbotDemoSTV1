@@ -497,8 +497,8 @@ alert_json_task = Task(
         Ensure all alert message is provided with case_id from the validation result. 
         If the validation result is fail, the alert message must include the reason.
         The alert or notification fromat is as follow:
-            *start with the Company name: "Japfa", 
-            *follow by case id
+            *The Company name: "Japfa", 
+            *case id get from the Json data
             *then message from the validation result.
 
         """
