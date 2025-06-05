@@ -40,7 +40,7 @@ from dotenv import load_dotenv
 # chat_id = '1961419857'
 
 load_dotenv()
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+# os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 os.environ["CREWAI_TELEMETRY_DISABLED"] = "1"
 
 # GROQ_API_KEY = os.getenv("GROQ_API_KEY")
