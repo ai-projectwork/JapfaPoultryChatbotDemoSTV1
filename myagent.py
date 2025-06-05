@@ -349,7 +349,7 @@ validate_json_data = Task(
         And all mandatory fields' value are present you must report as pass.
         """
     ),
-    expected_output="Validation result pass or fail with reason",
+    expected_output="Validation result pass or fail with reason and case_id",
     agent=data_json_validator,
     # context=[extract_data],  # Optionally, you can pass the extract_data task as context if needed
 )
@@ -498,7 +498,7 @@ alert_json_task = Task(
         If the validation result is fail, the alert message must include the reason.
         The alert or notification fromat is as follow:
             *The Company name: "Japfa", 
-            *case id get from the Json data
+            *case id : case_id
             *then message from the validation result.
 
         """
