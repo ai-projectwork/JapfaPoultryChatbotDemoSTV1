@@ -494,13 +494,17 @@ alert_json_task = Task(
     description=dedent(
         """
         Send an alert or notification based on the validation result..
-        Ensure all alert message is provided with case_id. 
+        Ensure all alert message is provided with case_id from the validation result. 
         If the validation result is fail, the alert message must include the reason.
+        The alert or notification fromat is as follow:
+            *start with the Company name: "Japfa", 
+            *follow by case id
+            *then message from the validation result.
 
         """
     ),
     agent=alert_agent,
-    expected_output="Alert sent or notification logged based on validation outcome.",
+    expected_output="Alert sent or notification logged based on formatted validation outcome .",
     context=[validate_json_data],
 )
 
