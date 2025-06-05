@@ -1,3 +1,6 @@
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import sqlite3
 from datetime import datetime
@@ -14,6 +17,11 @@ import os
 import random
 import string
 import time
+
+
+
+import sys
+sys.path.append('./')
 
 # Load environment variables from .env
 load_dotenv()
